@@ -104,7 +104,7 @@ const getUserById = (rq, rs) => {
   const index = users.findIndex((item) => item.id == userId);
 
   if (index !== -1) {
-    rs.send(users[index]);    
+    rs.send({ data: users[index]});    
   } else {
     rs.send({});
   }
