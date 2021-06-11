@@ -106,7 +106,7 @@ const getUserById = (rq, rs) => {
   if (index !== -1) {
     rs.send({ data: users[index]});
   } else {
-    rs.send({});
+    rs.status(404).send({});
   }
 }
 
