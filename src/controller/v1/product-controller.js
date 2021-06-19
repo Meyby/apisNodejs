@@ -93,8 +93,51 @@ const createProduct = (rq, rs) => {
   rs.send(newProduct);
 }
 
+const updateProduct = (rq, rs) => {
+  const id = parseInt(rq.params.productId);
+  const { name, year, color, pantone_value } = rq.body;
+  const index = products.findIndex((item) => item.id == id);
+
+  if (index !== -1) {
+    products[index] = {
+      id,
+      name,
+      year,
+      color,
+      pantone_value
+    }
+    rs.send({ data: products[index]});
+  } else {
+    rs.status(404).send({});
+  }
+}
+
+const partialUpdateProduct = (rq, rs) => {
+  const productId = parseInt(rq.params.productId);
+  const { id, name, year, color, pantone_value } = rq.body;
+  const index = products.findIndex((item) => item.id == productId);
+
+  if (index !== -1) {
+    const product = products[index];
+
+    products[index] = {
+      id: id || product.id,
+      name: name || product.name,
+      year: year || product.year,
+      color: color || product.color,
+      pantone_value: pantone_value || product.pantone_value
+    };
+
+    rs.send({ data: product });
+  } else {
+    rs.status(404).send({});
+  }
+}
+
 module.exports = {
   getProducts,
   getProductById,
-  createProduct
+  createProduct,
+  updateProduct,
+  partialUpdateProduct
 }
