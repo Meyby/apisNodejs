@@ -134,10 +134,34 @@ const partialUpdateProduct = (rq, rs) => {
   }
 }
 
+const updateProductAndNotify = (rq, rs) => {
+  const productId = parseInt(rq.params.productId);
+  const { client, data } = rq.body;
+  const { id, name, year, color, pantone_value } = data;
+  const index = products.findIndex((item) => item.id == productId);
+
+  if (index !== -1) {
+    const product = products[index];
+
+    products[index] = {
+      id: id || product.id,
+      name: name || product.name,
+      year: year || product.year,
+      color: color || product.color,
+      pantone_value: pantone_value || product.pantone_value
+    };
+
+    rs.send({ data: products[index], message: `Email send to ${client}` });
+  } else {
+    rs.status(404).send({});
+  }
+}
+
 module.exports = {
   getProducts,
   getProductById,
   createProduct,
   updateProduct,
-  partialUpdateProduct
+  partialUpdateProduct,
+  updateProductAndNotify
 }
