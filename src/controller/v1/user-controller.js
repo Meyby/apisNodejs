@@ -100,7 +100,14 @@ const getUsers = (rq, rs) => {
 };
 
 const getUserById = (rq, rs) => {
+  const { userId } = rq.params;
+  const index = users.findIndex((item) => item.id == userId);
 
+  if (index !== -1) {
+    rs.send({ data: users[index]});
+  } else {
+    rs.status(404).send({});
+  }
 }
 
 module.exports = {
