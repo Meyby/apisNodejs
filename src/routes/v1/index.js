@@ -10,6 +10,7 @@ const createRoutesV1 = (app) => {
   app.put('/api/v1/products/:productId', productsController.updateProduct); // Actualizar toda la lista
   app.patch('/api/v1/products/:productId', productsController.partialUpdateProduct); // Actualizar un campo de un item
   app.post('/api/v1/products/:productId/notify-client', productsController.updateProductAndNotify);
+  app.delete('/api/v1/products/:productId', productsController.deleteProductById);
 };
 
 module.exports = createRoutesV1;

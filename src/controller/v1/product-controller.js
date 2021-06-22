@@ -157,11 +157,24 @@ const updateProductAndNotify = (rq, rs) => {
   }
 }
 
+const deleteProductById = (rq, rs) => {
+  const productId = parseInt(rq.params.productId);
+  const index = products.findIndex((item) => item.id == productId);
+
+  if (index !== -1) {
+    products.splice(index, 1);
+    rs.send({});
+  } else {
+    rs.status(404).send({});
+  }
+}
+
 module.exports = {
   getProducts,
   getProductById,
   createProduct,
   updateProduct,
   partialUpdateProduct,
-  updateProductAndNotify
+  updateProductAndNotify,
+  deleteProductById
 }
