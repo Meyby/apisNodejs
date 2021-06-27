@@ -1,3 +1,6 @@
 # Ignoramos la carpeta de dependencias
 node_modules
 dist
+
+# Archivo que contiene las credencias por ello debemos ignorar
+.env
