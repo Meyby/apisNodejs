@@ -3,6 +3,9 @@ import * as userController from '../../controller/v1/user-controller';
 import *  as productsController from '../../controller/v1/product-controller';
 
 const createRoutesV1 = (app: Application): void => {
+  // Migrando a conexion con base de datos en linea
+  app.post('/api/v1/users/create', userController.createUser);
+  // Apis antiguas 
   app.get('/api/v1/users', userController.getUsers);
   app.get('/api/v1/users/:userId', userController.getUserById);
   app.get('/api/v1/products', productsController.getProducts);
