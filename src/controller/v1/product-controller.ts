@@ -1,121 +1,141 @@
 import { Request, Response } from 'express';
-import { products, Products } from '../../data/products';
+import Products from '../../db/schemas/products';
+import { sendError, validaObjectId } from '../../utils/errors';
 
-export const getProducts = (rq: Request, rs: Response): void => {
+export const createProduct = async (
+  rq: Request,
+  rs: Response
+): Promise<void> => {
+  try {
+    const { name, year, price, description, user } = rq.body;
+
+    validaObjectId(user);
+    const product = await Products.create({
+      name,
+      year,
+      price,
+      description,
+      user,
+    });
+
+    rs.send(product);
+  } catch (e) {
+    sendError(rs, e);
+  }
+};
+
+export const getProducts = async (rq: Request, rs: Response): Promise<void> => {
   const itemsPerPage = 3;
-  const page = parseInt(rq.query.page as string);
+  const page: number = parseInt(rq.query.page as string);
   const start = (page - 1) * itemsPerPage;
-  const total = products.length;
-  const end = page * itemsPerPage;
+  const total: number = await Products.count();
+
+  const products = await Products.find().skip(start).limit(itemsPerPage);
 
   rs.send({
     page: page,
     per_page: itemsPerPage,
     total: total,
     total_pages: Math.ceil(total / itemsPerPage),
-    data: products.slice(start, end),
+    data: products,
   });
 };
 
-export const getProductById = (rq: Request, rs: Response): void => {
-  const { productId } = rq.params;
-  const index: number = products.findIndex(
-    (item) => item.id === parseInt(productId)
-  );
+export const getProductById = async (
+  rq: Request,
+  rs: Response
+): Promise<void> => {
+  try {
+    const { productId } = rq.params;
 
-  if (index !== -1) {
-    rs.send({ data: products[index] });
-  } else {
-    rs.status(404).send({});
+    validaObjectId(productId);
+
+    const product = await Products.findById(productId);
+
+    if (product) {
+      rs.send({ data: product });
+    } else {
+      rs.status(404).send({});
+    }
+  } catch (e) {
+    sendError(rs, e);
   }
 };
 
-export const createProduct = (rq: Request, rs: Response): void => {
-  const { name, year, color, pantoneValue }: Products = rq.body;
-  const newProduct: Products = {
-    id: products.length + 1,
-    name, // name: name
-    year,
-    color,
-    pantoneValue,
-  };
+export const updateProduct = async (
+  rq: Request,
+  rs: Response
+): Promise<void> => {
+  try {
+    const id = rq.params.productId;
 
-  products.push(newProduct);
-  rs.send(newProduct);
-};
+    validaObjectId(id);
 
-export const updateProduct = (rq: Request, rs: Response): void => {
-  const id = parseInt(rq.params.productId);
-  const { name, year, color, pantoneValue }: Products = rq.body;
-  const index = products.findIndex((item) => item.id === id);
+    const { name, year, price, description, user } = rq.body;
 
-  if (index !== -1) {
-    products[index] = {
-      id,
+    const updateProduct = await Products.findByIdAndUpdate(id, {
       name,
       year,
-      color,
-      pantoneValue,
-    };
-    rs.send({ data: products[index] });
-  } else {
-    rs.status(404).send({});
+      price,
+      description,
+      user,
+    });
+
+    if (updateProduct) {
+      rs.send({ data: 'OK' });
+    } else {
+      rs.status(404).send({});
+    }
+  } catch (e) {
+    sendError(rs, e);
   }
 };
 
-export const partialUpdateProduct = (rq: Request, rs: Response): void => {
-  const productId = parseInt(rq.params.productId);
-  const { id, name, year, color, pantoneValue }: Products = rq.body;
-  const index = products.findIndex((item) => item.id === productId);
+export const partialUpdateProduct = async (
+  rq: Request,
+  rs: Response
+): Promise<void> => {
+  try {
+    const productId = rq.params.productId;
+    const { name, year, price, description, user } = rq.body;
 
-  if (index !== -1) {
-    const product = products[index];
+    const product = await Products.findById(productId);
 
-    products[index] = {
-      id: id || product.id,
-      name: name || product.name,
-      year: year || product.year,
-      color: color || product.color,
-      pantoneValue: pantoneValue || product.pantoneValue,
-    };
+    if (product) {
+      product.name = name || product.name;
+      product.year = year || product.year;
+      product.price = price || product.price;
+      product.description = description || product.description;
+      product.user = user || product.user;
 
-    rs.send({ data: product });
-  } else {
-    rs.status(404).send({});
+      await product.save();
+
+      rs.send({ data: product });
+    } else {
+      rs.status(404).send({});
+    }
+  } catch (e) {
+    sendError(rs, e);
   }
 };
 
-export const updateProductAndNotify = (rq: Request, rs: Response): void => {
-  const productId: number = parseInt(rq.params.productId);
-  const { client, data } = rq.body;
-  const { id, name, year, color, pantoneValue }: Products = data;
-  const index: number = products.findIndex((item) => item.id === productId);
+export const deleteProductById = async (
+  rq: Request,
+  rs: Response
+): Promise<void> => {
+  try {
+    const productId: string = rq.params.productId;
 
-  if (index !== -1) {
-    const product = products[index];
+    validaObjectId(productId);
 
-    products[index] = {
-      id: id || product.id,
-      name: name || product.name,
-      year: year || product.year,
-      color: color || product.color,
-      pantoneValue: pantoneValue || product.pantoneValue,
-    };
+    const deleted: any = await Products.deleteOne({ _id: productId });
 
-    rs.send({ data: products[index], message: `Email send to ${client}` });
-  } else {
-    rs.status(404).send({});
-  }
-};
-
-export const deleteProductById = (rq: Request, rs: Response): void => {
-  const productId = parseInt(rq.params.productId);
-  const index: number = products.findIndex((item) => item.id === productId);
-
-  if (index !== -1) {
-    products.splice(index, 1);
-    rs.send({});
-  } else {
-    rs.status(404).send({});
+    if (deleted.deletedCount > 0) {
+      rs.send({ data: 'Elemento eliminado' });
+    } else {
+      rs.status(404).send({});
+    }
+  } catch (e) {
+    sendError(rs, e);
   }
 };
