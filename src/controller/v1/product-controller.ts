@@ -50,7 +50,13 @@ export const getProductById = async (
 
     validaObjectId(productId);
 
-    const product = await Products.findById(productId);
+    const product = await Products.findById(productId).populate({
+      path: 'user',
+      select: {
+        password: 0,
+        __v: 0
+      }
+    });
 
     if (product) {
       rs.send({ data: product });
