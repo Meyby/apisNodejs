@@ -9,12 +9,12 @@ interface Product extends Document {
   user: ObjectId | User;
 }
 
-const schema = new Schema ({
+const schema = new Schema({
   name: { type: String, require: true },
   year: { type: Number, require: true },
   price: { type: Number, default: 0 },
   description: String,
-  user: { type: Schema.Types.ObjectId, ref: 'user' } // Es como una llave foranea
+  user: { type: Schema.Types.ObjectId, ref: 'user', require: true }, // Es como una llave foranea
 });
 
 const Products = model<Product>('product', schema);
