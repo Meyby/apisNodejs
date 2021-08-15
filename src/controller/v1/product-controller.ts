@@ -25,7 +25,7 @@ export const createProduct = async (
 };
 
 export const getProducts = async (rq: Request, rs: Response): Promise<void> => {
-  const itemsPerPage = 3;
+  const itemsPerPage: number = 20;
   const page: number = parseInt(rq.query.page as string);
   const start = (page - 1) * itemsPerPage;
   const total: number = await Products.count();
@@ -145,3 +145,32 @@ export const deleteProductById = async (
     sendError(rs, e);
   }
 };
+
+export const updateProductAndNotify = async (rq: Request, rs: Response): Promise<void> => {
+
+  try {
+    const productId = rq.params.productId;
+    validaObjectId(productId);
+    const { client, data } = rq.body;
+    const {  name, year, price, description, user  } = data;
+
+    if (user) {
+      validaObjectId(user);      
+    }
+    const product = await Products.findById(productId);
+
+    if (product) {
+      product.name = name || product.name;
+      product.year = year || product.year;
+      product.price = price || product.price;
+      product.description = description || product.description;
+      product.user = user || product.user;
+
+      rs.send({ data: product, message: `Email send to ${client}` });
+    } else {
+      rs.status(404).send({});
+    }
+  } catch (e) {
+    sendError(rs, e);
+  }
+}
