@@ -7,15 +7,16 @@ export const createProduct = async (
   rs: Response
 ): Promise<void> => {
   try {
-    const { name, year, price, description, user } = rq.body;
+    const { userId } = rq.session;
+    const { name, year, price, description } = rq.body;
 
-    validaObjectId(user);
+    validaObjectId(userId);
     const product = await Products.create({
       name,
       year,
       price,
       description,
-      user,
+      user: userId,
     });
 
     rs.send(product);
@@ -28,9 +29,13 @@ export const getProducts = async (rq: Request, rs: Response): Promise<void> => {
   const itemsPerPage: number = 20;
   const page: number = parseInt(rq.query.page as string);
   const start = (page - 1) * itemsPerPage;
-  const total: number = await Products.count();
-
-  const products = await Products.find().skip(start).limit(itemsPerPage);
+  const total: number = await Products.count({ user: rq.session.userId });
+  
+  const products = await Products.find({
+    user: rq.session.userId // Es suficiente con quitarle el filtro para listar todos los productos
+  })
+    .skip(start)
+    .limit(itemsPerPage);
 
   rs.send({
     page: page,
@@ -50,12 +55,15 @@ export const getProductById = async (
 
     validaObjectId(productId);
 
-    const product = await Products.findById(productId).populate({
+    const product = await Products.findOne({
+      _id: productId,
+      user: rq.session.userId
+    }).populate({
       path: 'user',
       select: {
         password: 0,
-        __v: 0
-      }
+        __v: 0,
+      },
     });
 
     if (product) {
@@ -77,14 +85,17 @@ export const updateProduct = async (
 
     validaObjectId(id);
 
-    const { name, year, price, description, user } = rq.body;
+    const { name, year, price, description } = rq.body;
 
-    const updateProduct = await Products.findByIdAndUpdate(id, {
+    const updateProduct = await Products.findOneAndUpdate({
+      _id: id,
+      user: rq.session.userId
+    }, {
       name,
       year,
       price,
       description,
-      user,
+      user: rq.session.userId,
     });
 
     if (updateProduct) {
@@ -103,16 +114,18 @@ export const partialUpdateProduct = async (
 ): Promise<void> => {
   try {
     const productId = rq.params.productId;
-    const { name, year, price, description, user } = rq.body;
+    const { name, year, price, description } = rq.body;
 
-    const product = await Products.findById(productId);
+    const product = await Products.findOne({ 
+      _id: productId,
+      user: rq.session.userId
+    });
 
     if (product) {
       product.name = name || product.name;
       product.year = year || product.year;
       product.price = price || product.price;
       product.description = description || product.description;
-      product.user = user || product.user;
 
       await product.save();
 
@@ -134,10 +147,13 @@ export const deleteProductById = async (
 
     validaObjectId(productId);
 
-    const deleted: any = await Products.deleteOne({ _id: productId });
+    const deleted: any = await Products.deleteOne({ 
+      _id: productId,
+      user: rq.session.userId
+    });
 
     if (deleted.deletedCount > 0) {
-      rs.send({ data: 'Elemento eliminado' });
+      rs.send({ data: 'Eliminado' });
     } else {
       rs.status(404).send({});
     }
@@ -146,25 +162,26 @@ export const deleteProductById = async (
   }
 };
 
-export const updateProductAndNotify = async (rq: Request, rs: Response): Promise<void> => {
-
+export const updateProductAndNotify = async (
+  rq: Request,
+  rs: Response
+): Promise<void> => {
   try {
     const productId = rq.params.productId;
     validaObjectId(productId);
     const { client, data } = rq.body;
-    const {  name, year, price, description, user  } = data;
+    const { name, year, price, description } = data;
 
-    if (user) {
-      validaObjectId(user);      
-    }
-    const product = await Products.findById(productId);
+    const product = await Products.findOne({
+      _id: productId,
+      user: rq.session.userId
+    });
 
     if (product) {
       product.name = name || product.name;
       product.year = year || product.year;
       product.price = price || product.price;
       product.description = description || product.description;
-      product.user = user || product.user;
 
       rs.send({ data: product, message: `Email send to ${client}` });
     } else {
@@ -173,4 +190,4 @@ export const updateProductAndNotify = async (rq: Request, rs: Response): Promise
   } catch (e) {
     sendError(rs, e);
   }
-}
+};
