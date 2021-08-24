@@ -1,16 +1,18 @@
 import { Router } from 'express';
 import * as productsController from '../../controller/v1/product-controller';
+import { checkAut } from '../../middlewares/auth-middleware';
 
 const router = Router();
 
-router.post('/create', productsController.createProduct);
-router.get('', productsController.getProducts);
-router.get('/:productId', productsController.getProductById);
-router.put('/:productId', productsController.updateProduct); // Actualizar toda la lista
-router.patch('/:productId', productsController.partialUpdateProduct);
-router.delete('/:productId', productsController.deleteProductById);
+router.get('', checkAut, productsController.getProducts);
+router.post('/create', checkAut, productsController.createProduct);
+router.get('', checkAut, productsController.getProducts);
+router.get('/:productId', checkAut, productsController.getProductById);
+router.put('/:productId', checkAut, productsController.updateProduct); // Actualizar toda la lista
+router.patch('/:productId', checkAut, productsController.partialUpdateProduct);
+router.delete('/:productId', checkAut, productsController.deleteProductById);
 router.post(
-  '/:productId/notify-client',
+  '/:productId/notify-client', checkAut,
   productsController.updateProductAndNotify
 );
 
