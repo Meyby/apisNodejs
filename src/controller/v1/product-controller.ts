@@ -7,10 +7,10 @@ export const createProduct = async (
   rs: Response
 ): Promise<void> => {
   try {
-    const { userId } = rq.session;
+    const { userId } = rq.session;    
     const { name, year, price, description } = rq.body;
 
-    validaObjectId(userId);
+    // validaObjectId(userId);
     const product = await Products.create({
       name,
       year,
