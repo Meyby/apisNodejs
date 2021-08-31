@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>my.app</title>
+  </head>
+  <body>
+    <form action="http://localhost:5000/api/v1/users/login" method="POST" id="login-form">
+      <!-- <input name="email" type="email" placeholder="email" required />
+      <input name="password" type="password" placeholder="password" required /> -->
+      <button type="submit">Enviar</button>
+    </form>
+
+    <script>
+      var formElement = document.getElementById("login-form");
+      formElement.addEventListener("submit", function(evnt) {
+        evnt.preventDefault();
+
+        var request = new XMLHttpRequest();
+        request.open("POST", "http://localhost:5000/api/v1/users/login");
+        request.setRequestHeader("Content-Type", "application/json")
+        request.onload = function(_) {
+          if (request.status === 200) {
+            console.log(request.responseText);
+          } else {
+            console.log(request.status);
+          }
+        };
+        request.send(JSON.stringify({ "email": "test@gmail.com", "password": "123" }));
+      });
+    </script>
+  </body>
+</html>
